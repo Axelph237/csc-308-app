@@ -1,8 +1,10 @@
 import express from "express";
+import cors from "cors";
 
 const app = express();
 const port = 8000;
 
+app.use(cors());
 app.use(express.json());
 
 app.get("/", (req, res) => {
@@ -92,34 +94,40 @@ app.get("/users/:id", (req, res) => {
 
 // POST new User
 const addUser = (user) => {
+    // Create random id for user
+    const id = user.name + user.job + Math.floor(Math.random() * 1000000);
+    user.id = id;
+
     users["users_list"].push(user);
     return user;
 };
   
 app.post("/users", (req, res) => {
     const userToAdd = req.body;
-    addUser(userToAdd);
-    res.send();
+    const newUser = addUser(userToAdd);
+    res.status(201).send(newUser);
 });
 
 // DELETE user
 const deleteUserById = (id) => {
-  const index = users["users_list"].findIndex((user) => user["id"] === id);
-  users["users_list"].splice(index, 1);
-  if (index) {
-    return "ok";
-  }
-  else {
-    return undefined;
-  }
+    const index = users["users_list"].findIndex((user) => user["id"] === id);
+    users["users_list"].splice(index, 1);
+    if (index !== undefined) {
+        return "ok";
+    }
+    else {
+        return undefined;
+    }
 };
 
 app.delete("/users/:id", (req, res) => {
-  const id = req.params["id"]; //or req.params.id
-    const result = deleteUserById(id);
+    const id = req.params["id"]; //or req.params.i
+    const decodedId = decodeURI(id)
+
+    const result = deleteUserById(decodedId);
     if (result === undefined) {
-      res.status(404).send("Resource not found.");
+        res.status(404).send("Resource not found.");
     } else {
-      res.send("User deleted.");
+        res.send(users.users_list);
     }
 });
